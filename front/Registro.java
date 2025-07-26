@@ -47,7 +47,7 @@ public class Registro extends JFrame {
         txtTelefono = new JTextField(15);
 
         JLabel lblRol = new JLabel("Rol:");
-        comboRol = new JComboBox<>(new String[]{"Administrador", "Médico", "Contador", "Usuario Corriente"});
+        comboRol = new JComboBox<>(new String[]{"Paciente", "Médico"});
 
         // Campo de especialidad (inicialmente oculto)
         lblEspecialidad = new JLabel("Especialidad:");
