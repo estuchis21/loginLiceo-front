@@ -134,6 +134,8 @@ public class VentanaCrearTurno extends JFrame {
 
         if (exito) {
             JOptionPane.showMessageDialog(this, "Turno asignado correctamente.");
+            VentanaTurnosAsignados turnosAsig = new VentanaTurnosAsignados(idPaciente);
+            turnosAsig.setVisible(true);
             dispose();
         } else {
             JOptionPane.showMessageDialog(this, "No se pudo asignar el turno.");
