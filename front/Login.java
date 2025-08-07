@@ -1,5 +1,6 @@
 package gestiontusanatorio.loginLiceo.front;
 
+import gestiontusanatorio.back.Models.Usuarios;
 import gestiontusanatorio.loginLiceo.front.Controllers.LoginController;
 
 import javax.swing.*;
@@ -18,14 +19,12 @@ public class Login extends JFrame {
         setSize(600, 500);
         setLocationRelativeTo(null);
 
-        // Panel contenedor general con fondo azul marino (navy)
         JPanel backgroundPanel = new JPanel();
-        backgroundPanel.setBackground(new Color(0, 0, 128));  // Azul marino
+        backgroundPanel.setBackground(new Color(0, 0, 128));
         backgroundPanel.setLayout(new GridBagLayout());
 
-        // Panel interno con fondo rojo sólido que contiene el formulario
         JPanel loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBackground(new Color(204, 0, 0)); // Rojo tipo Liceo
+        loginPanel.setBackground(new Color(204, 0, 0));
 
         controller = new LoginController(this);
 
@@ -44,41 +43,57 @@ public class Login extends JFrame {
         btnIngresar = new JButton("Ingresar");
         btnRegistrarse = new JButton("Registrarse");
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0;
         loginPanel.add(lblUsuario, gbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1; gbc.gridy = 0; gbc.fill = GridBagConstraints.HORIZONTAL;
         loginPanel.add(txtUsername, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
         loginPanel.add(lblContrasena, gbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1; gbc.gridy = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         loginPanel.add(txtContrasena, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
         loginPanel.add(btnIngresar, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         loginPanel.add(btnRegistrarse, gbc);
 
         btnIngresar.addActionListener(e -> {
-            String username = txtUsername.getText();
+            String username = txtUsername.getText().trim();
             String password = new String(txtContrasena.getPassword());
-            controller.login(username, password);
+
+            if (username.isEmpty() || password.isEmpty()) {
+                mostrarMensaje("Por favor, ingrese usuario y contraseña.");
+                return;
+            }
+
+            Usuarios usuarioLogueado = controller.login(username, password);
+
+            if (usuarioLogueado != null) {
+                int idUsuario;
+                int idObraSocial = 0;
+                int idRol = usuarioLogueado.getIdRol();
+                String nombres = usuarioLogueado.getNombres(); // ⚠️ Asegurate que el método sea getNombre()
+
+                if (idRol == 1) { // Paciente
+                    idUsuario = usuarioLogueado.getIdPaciente();
+                    idObraSocial = controller.obtenerIdObraSocialPaciente(idUsuario);
+                } else if (idRol == 2) { // Médico
+                    idUsuario = usuarioLogueado.getIdMedico();
+                } else {
+                    mostrarMensaje("Rol no soportado.");
+                    return;
+                }
+
+                VentanaBienvenida bienv = new VentanaBienvenida(idUsuario, nombres, idObraSocial, idRol);
+                bienv.setVisible(true);
+                dispose();
+            } else {
+                mostrarMensaje("Usuario o contraseña incorrectos.");
+            }
         });
 
         btnRegistrarse.addActionListener(e -> {
@@ -87,12 +102,8 @@ public class Login extends JFrame {
             dispose();
         });
 
-        // Agrego el panel rojo (loginPanel) dentro del panel azul (backgroundPanel)
         backgroundPanel.add(loginPanel);
-
-        // Seteo el panel azul como contenido principal
         setContentPane(backgroundPanel);
-
         setVisible(true);
     }
 
@@ -104,7 +115,6 @@ public class Login extends JFrame {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}
-
         SwingUtilities.invokeLater(Login::new);
     }
 }
