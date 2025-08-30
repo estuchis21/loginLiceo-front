@@ -1,5 +1,8 @@
 package gestiontusanatorio.loginLiceo.front;
 
+import gestiontusanatorio.back.Models.Usuarios;
+import gestiontusanatorio.loginLiceo.front.Controllers.LoginController;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -8,68 +11,110 @@ public class Login extends JFrame {
     private JPasswordField txtContrasena;
     private JButton btnIngresar, btnRegistrarse;
 
+    private LoginController controller;
+
     public Login() {
         setTitle("Login");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(350, 200);
+        setSize(600, 500);
         setLocationRelativeTo(null);
-        setLayout(new GridBagLayout());
+
+        JPanel backgroundPanel = new JPanel();
+        backgroundPanel.setBackground(new Color(0, 0, 128));
+        backgroundPanel.setLayout(new GridBagLayout());
+
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(new Color(204, 0, 0));
+
+        controller = new LoginController(this);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5,5,5,5);
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
 
         JLabel lblUsuario = new JLabel("Username:");
+        lblUsuario.setForeground(Color.WHITE);
         txtUsername = new JTextField(15);
 
         JLabel lblContrasena = new JLabel("Contraseña:");
+        lblContrasena.setForeground(Color.WHITE);
         txtContrasena = new JPasswordField(15);
 
         btnIngresar = new JButton("Ingresar");
         btnRegistrarse = new JButton("Registrarse");
 
-        gbc.anchor = GridBagConstraints.WEST;
-
         gbc.gridx = 0; gbc.gridy = 0;
-        add(lblUsuario, gbc);
+        loginPanel.add(lblUsuario, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        add(txtUsername, gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        loginPanel.add(txtUsername, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.NONE;
-        add(lblContrasena, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
+        loginPanel.add(lblContrasena, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        add(txtContrasena, gbc);
+        gbc.gridx = 1; gbc.gridy = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        loginPanel.add(txtContrasena, gbc);
 
-        // Botón ingresar centrado
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(btnIngresar, gbc);
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
+        loginPanel.add(btnIngresar, gbc);
 
-        // Botón registrarse centrado debajo
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        add(btnRegistrarse, gbc);
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
+        loginPanel.add(btnRegistrarse, gbc);
 
-        // Eventos botón registrarse: abrir ventana registro y cerrar login
+        btnIngresar.addActionListener(e -> {
+            String username = txtUsername.getText().trim();
+            String password = new String(txtContrasena.getPassword());
+
+            if (username.isEmpty() || password.isEmpty()) {
+                mostrarMensaje("Por favor, ingrese usuario y contraseña.");
+                return;
+            }
+
+            Usuarios usuarioLogueado = controller.login(username, password);
+
+            if (usuarioLogueado != null) {
+                int idUsuario;
+                int idObraSocial = 0;
+                int idRol = usuarioLogueado.getIdRol();
+                String nombres = usuarioLogueado.getNombres(); // ⚠️ Asegurate que el método sea getNombre()
+
+                if (idRol == 1) { // Paciente
+                    idUsuario = usuarioLogueado.getIdPaciente();
+                    idObraSocial = controller.obtenerIdObraSocialPaciente(idUsuario);
+                } else if (idRol == 2) { // Médico
+                    idUsuario = usuarioLogueado.getIdMedico();
+                } else {
+                    mostrarMensaje("Rol no soportado.");
+                    return;
+                }
+
+                VentanaBienvenida bienv = new VentanaBienvenida(idUsuario, nombres, idObraSocial, idRol);
+                bienv.setVisible(true);
+                dispose();
+            } else {
+                mostrarMensaje("Usuario o contraseña incorrectos.");
+            }
+        });
+
         btnRegistrarse.addActionListener(e -> {
-            new Registro();
+            Registro registro = new Registro();
+            registro.setVisible(true);
             dispose();
         });
 
+        backgroundPanel.add(loginPanel);
+        setContentPane(backgroundPanel);
         setVisible(true);
+    }
+
+    public void mostrarMensaje(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje);
     }
 
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch(Exception ignored){}
-
+        } catch (Exception ignored) {}
         SwingUtilities.invokeLater(Login::new);
     }
 }
